@@ -1,0 +1,173 @@
+{
+	"info": {
+		"_postman_id": "a4cec336-a594-4507-a5f2-3eaf741fefcd",
+		"name": "file-upload-api",
+		"description": "A ready-to-use **Spring Boot starter project** for uploading, serving, deleting, and retrieving metadata of files.  \n  \nIncludes **REST APIs** with a Postman collection for quick testing.\n\nThis project is ideal for developers who want a clean **file management boilerplate** to integrate into larger applications (document storage, media servers, student projects, etc.).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47320634",
+		"_collection_link": "https://amit884084-9443735.postman.co/workspace/1d3ade56-d7e0-4fa7-8597-061df2186427/collection/47320634-a4cec336-a594-4507-a5f2-3eaf741fefcd?action=share&source=collection_link&creator=47320634"
+	},
+	"item": [
+		{
+			"name": "Upload File",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/D:/boiler_agents_HQ/Logo/logo.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/file",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"file"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Stream File",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/AMIT MISHRA/OneDrive/Pictures/Camera Roll/profile.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/file/3eff281d-5e2a-4b54-b59f-b579073c0253.png",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"file",
+						"3eff281d-5e2a-4b54-b59f-b579073c0253.png"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete File",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/file/0e149ac6-936d-4fbb-8e7f-8156913c3a72.jpg",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"file",
+						"0e149ac6-936d-4fbb-8e7f-8156913c3a72.jpg"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "File List",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/file/list",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"file",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get File Info",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var template = `\r",
+							"<style type=\"text/css\">\r",
+							"    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}\r",
+							"    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}\r",
+							"    .tftable tr {background-color:#ffffff;}\r",
+							"    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}\r",
+							"    .tftable tr:hover {background-color:#e0ffff;}\r",
+							"</style>\r",
+							"\r",
+							"<table class=\"tftable\" border=\"1\">\r",
+							"    <tr>\r",
+							"        <th>Name</th>\r",
+							"        <th>Size (KB)</th>\r",
+							"        <th>MIME Type</th>\r",
+							"        <th>Last Modified</th>\r",
+							"    </tr>\r",
+							"    <tr>\r",
+							"        <td>{{response.name}}</td>\r",
+							"        <td>{{response.sizeKB}}</td>\r",
+							"        <td>{{response.mimeType}}</td>\r",
+							"        <td>{{response.lastModified}}</td>\r",
+							"    </tr>\r",
+							"</table>\r",
+							"`;\r",
+							"\r",
+							"function constructVisualizerPayload() {\r",
+							"    return { response: pm.response.json() };\r",
+							"}\r",
+							"\r",
+							"pm.visualizer.set(template, constructVisualizerPayload());"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/file/info/622c5d89-03fc-4dea-93ad-7fcc69eb49eb.mp4",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"file",
+						"info",
+						"622c5d89-03fc-4dea-93ad-7fcc69eb49eb.mp4"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://localhost:8000",
+			"type": "default"
+		}
+	]
+}
