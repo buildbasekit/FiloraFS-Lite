@@ -87,3 +87,6 @@ If this helped you:
 We build **production-ready starter kits** so you can skip setup and ship faster.
 
 🌐 [https://buildbasekit.com](https://buildbasekit.com)
+
+For special requirements:
+📩 **[hello@buildbasekit.com](mailto:hello@buildbasekit.com)**
