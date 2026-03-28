@@ -14,7 +14,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,22 +24,37 @@ public class FileService {
 	@Value("${upload.path}")
 	private String path;
 
-	private List<String> allowedFileType = List.of("image/png", "image/jpeg", "application/pdf");
+	private List<String> allowedFileType = List.of("image/png", "image/jpeg", "application/pdf", "image/webp");
 
 	public String saveFile(MultipartFile file) throws IOException {
+
 		String mimeType = file.getContentType();
 		if (!this.allowedFileType.contains(mimeType)) {
 			throw new RuntimeException("File type not allowed: " + mimeType);
 		}
+
 		File directory = new File(path.trim());
 		if (!directory.exists()) {
-			directory.mkdir();
+			directory.mkdirs(); // safer than mkdir()
 		}
-		String filename = UUID.randomUUID().toString()
-				.concat(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
+
+		// Get original filename
+		String originalFilename = file.getOriginalFilename();
+
+		// Extract extension safely
+		String extension = "";
+		if (originalFilename != null && originalFilename.contains(".")) {
+			extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+		}
+
+		// Generate new filename with UUID
+		String filename = UUID.randomUUID().toString() + extension;
+
 		String filepath = this.getFullPath(filename);
 		File dest = new File(filepath);
+
 		file.transferTo(dest);
+
 		return filename;
 	}
 
@@ -98,14 +112,14 @@ public class FileService {
 		return path.trim() + File.separator + fileName;
 	}
 
-	// scheduled tasks
-	@Scheduled(cron = "0 0 1 * * ?") // every day at 1 AM
-	public void cleanOldFiles() {
-		File folder = new File(path.trim());
-		long cutoff = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000); // 7 days
-		File[] oldFiles = folder.listFiles(file -> file.isFile() && file.lastModified() < cutoff);
-		for (File f : oldFiles)
-			f.delete();
-	}
+//	// scheduled tasks
+//	@Scheduled(cron = "0 0 1 * * ?") // every day at 1 AM
+//	public void cleanOldFiles() {
+//		File folder = new File(path.trim());
+//		long cutoff = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000); // 7 days
+//		File[] oldFiles = folder.listFiles(file -> file.isFile() && file.lastModified() < cutoff);
+//		for (File f : oldFiles)
+//			f.delete();
+//	}
 
 }

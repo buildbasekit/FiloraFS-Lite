@@ -2,7 +2,7 @@
 
 A **ready-to-use Spring Boot starter** for uploading, serving, deleting, and managing files via REST APIs.
 
-👉 Full details: https://buildbasekit.com/boilerplates/filora-fs-lite
+👉 Full details: [https://buildbasekit.com/boilerplates/filora-fs-lite](https://buildbasekit.com/boilerplates/filora-fs-lite)
 
 ---
 

@@ -22,6 +22,22 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/file")
+//@CrossOrigin(
+//		  origins = {
+//		    "https://admin.luxorides.com",
+//		    "http://localhost:3000"
+//		  },
+//		  allowedHeaders = {
+//		    "X-API-KEY",
+//		    "Content-Type"
+//		  },
+//		  methods = {
+//		    RequestMethod.GET,
+//		    RequestMethod.POST,
+//		    RequestMethod.DELETE,
+//		    RequestMethod.OPTIONS
+//		  }
+//		)
 public class FileController {
 
 	private FileService fileService;
