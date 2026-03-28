@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.file</groupId>
-	<artifactId>springboot-file-upload-api</artifactId>
+	<artifactId>FiloraFS-Lite</artifactId>
 	<version>1.0</version>
-	<name>springboot-file-upload-api</name>
+	<name>FiloraFS-Lite</name>
 	<description>File upload APIs</description>
 	<url/>
 	<licenses>
