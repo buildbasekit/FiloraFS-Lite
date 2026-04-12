@@ -1,92 +1,80 @@
-# 🚀 FiloraFS Lite – Spring Boot File Upload API Boilerplate
+# FiloraFS-Lite 📁
 
-A **ready-to-use Spring Boot starter** for uploading, serving, deleting, and managing files via REST APIs.
+Spring Boot file upload API boilerplate to handle upload, storage, and file management in minutes.
 
-👉 Full details: [https://buildbasekit.com/boilerplates/filora-fs-lite](https://buildbasekit.com/boilerplates/filora-fs-lite)
-
----
-
-## ⚡ What is this?
-
-FiloraFS Lite is a **minimal, production-ready file handling backend** you can plug into any application.
-
-Perfect for:
-- 📂 Document storage systems  
-- 🎬 Media servers  
-- 🎓 Student projects & demos  
-- 💼 Freelance / client projects  
+👉 Get full details & documentation: https://buildbasekit.com/boilerplates/filora-fs-lite  
+⭐ Star this repo if it saves you time
 
 ---
 
-## ✨ Features
+## ❌ The Problem
 
-- Upload files via REST API  
-- Stream/download files with correct MIME type  
-- Delete files by name  
-- List all uploaded files  
-- Retrieve file metadata (size, type, last modified)  
-- Includes Postman collection for quick testing  
+Handling file uploads in Spring Boot usually means:
+- writing upload/download logic from scratch  
+- dealing with file storage and MIME types  
+- repeating the same setup in every project  
 
 ---
 
-## 🛠 Tech Stack
+## ✅ The Solution
 
-- Java 21  
-- Spring Boot 3  
-- Maven  
+FiloraFS-Lite gives you a ready-to-use file handling backend with upload, streaming, and management APIs so you can focus on building features.
 
 ---
 
-## 📡 API Overview
-```
+## ⚡ Quick Start
 
-| Method | Endpoint                | Description          |
-| ------ | ----------------------- | -------------------- |
-| POST   | `/file`                 | Upload file          |
-| GET    | `/file/{filename}`      | Download/stream file |
-| DELETE | `/file/{filename}`      | Delete file          |
-| GET    | `/file/list`            | List all files       |
-| GET    | `/file/info/{filename}` | File metadata        |
-```
+### 1. Clone the repository
+Download or clone the project from GitHub.
 
----
+```bash
+git clone https://github.com/buildbasekit/FiloraFS-Lite
+cd FiloraFS-Lite
+````
 
-## 🔥 Want the Full Version?
+### 2. Configure environment
 
-👉 **FiloraFS Pro** includes:
+Set required properties in `application.properties`.
 
-* Authentication & authorization
-* Role-based access
-* AWS S3 integration
-* Production-ready architecture
+### 3. Run the application
 
-Get it here:
-👉 [https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage](https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage)
+Start the Spring Boot app and begin testing APIs with **provided Postman collection**.
 
 ---
 
-## 🎯 Who is this for?
+## 🚀 Features
 
-* Spring Boot developers
-* Students building real-world projects
-* Freelancers who need a quick backend
-
----
-
-## ⭐ Support
-
-If this helped you:
-
-* Give it a ⭐ on GitHub
-* Share with other devs
+* Upload files via REST API
+* API key-based authentication to secure all endpoints
+* Stream/download files with correct MIME type
+* Delete files by name
+* List all uploaded files
+* Retrieve file metadata
+* Clean and minimal backend structure
 
 ---
 
-## 🔗 About BuildBaseKit
+## 🎯 Use Cases
 
-We build **production-ready starter kits** so you can skip setup and ship faster.
+* Document storage systems
+* Media/file servers
+* Backend starter projects
+* Client/freelance projects
 
-🌐 [https://buildbasekit.com](https://buildbasekit.com)
+---
 
-For special requirements:
-📩 **[hello@buildbasekit.com](mailto:hello@buildbasekit.com)**
+## 🚀 Need a Production-Ready Backend?
+
+Get a complete backend with:
+
+* Authentication
+* File storage (S3)
+* Clean architecture
+
+👉 FiloraFS-Pro
+[https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage](https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage)
+
+---
+
+Built by BuildBaseKit
+[https://buildbasekit.com](https://buildbasekit.com)
