@@ -65,12 +65,7 @@ filorafs.api-key=${FILORAFS_API_KEY}
 filorafs.storage-path=${FILORAFS_STORAGE_PATH}
 ```
 
-or:
-
-```properties
-file.api.key=<paste-here-strong-key>
-upload.path=<path-to-your-upload-folder>
-```
+or use clearly fake placeholder values in documentation examples.
 
 ### 3. Do not trust user input
 
@@ -215,7 +210,7 @@ When modifying download/stream logic:
 - Return 404 or controlled fallback for missing files.
 - Do not expose internal filesystem paths.
 
-If changing current `default.png` fallback behavior, document it.
+- Return 404 for missing files.
 
 ---
 
@@ -229,7 +224,7 @@ When modifying delete logic:
 - Return clear result/status.
 - Consider missing file behavior deliberately.
 
-Avoid deleting protected fallback assets such as `default.png` if such a rule is introduced.
+- Consider missing file behavior deliberately.
 
 ---
 

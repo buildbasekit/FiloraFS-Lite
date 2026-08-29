@@ -41,7 +41,7 @@ Start the Spring Boot app instantly with zero configuration required.
 
 ### 3. Test APIs
 Open the built-in API Test UI in your browser:
-**[http://localhost:8080/api-test](http://localhost:8080/api-test)**
+**[http://localhost:8000/api-test](http://localhost:8000/api-test)**
 
 Or use the **provided Postman collection**.
 

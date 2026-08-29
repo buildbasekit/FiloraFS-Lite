@@ -69,6 +69,39 @@ class FileServiceTests {
 	}
 
 	@Test
+	void testAbsolutePathRejected() {
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> fileService.getFileAsResource("/etc/passwd"));
+		assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+	}
+
+	@Test
+	void testEmptyFilenameRejected() {
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> fileService.getFileAsResource(""));
+		assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+	}
+
+	@Test
+	void testNullFilenameRejected() {
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> fileService.getFileAsResource(null));
+		assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+	}
+
+	@Test
+	void testDeletePathTraversalBlocked() {
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> fileService.deleteFile("../secret.txt"));
+		assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+	}
+
+	@Test
+	void testEmptyFileRejected() {
+		MockMultipartFile file = new MockMultipartFile(
+				"file", "empty.png", "image/png", new byte[0]);
+		
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> fileService.saveFile(file));
+		assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+	}
+
+	@Test
 	void testDeleteFile() throws IOException {
 		Path testFile = tempStorageRoot.resolve("delete-me.png");
 		Files.writeString(testFile, "data");

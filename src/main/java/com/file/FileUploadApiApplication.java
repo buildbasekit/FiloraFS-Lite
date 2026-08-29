@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-//@EnableScheduling
 public class FileUploadApiApplication {
 
 	public static void main(String[] args) {

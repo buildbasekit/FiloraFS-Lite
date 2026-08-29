@@ -116,3 +116,6 @@ coverage/
 *.jar
 *.war
 *.ear
+
+# Runtime upload directory
+uploads/

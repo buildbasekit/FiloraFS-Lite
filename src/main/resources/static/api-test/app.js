@@ -1,5 +1,12 @@
 const BASE_URL = '/file';
 
+// Utility: HTML-escape untrusted strings before innerHTML interpolation
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
 // DOM Elements
 const apiKeyInput = document.getElementById('apiKey');
 const uploadForm = document.getElementById('uploadForm');
@@ -31,12 +38,12 @@ function showResponse(method, endpoint, status, body, duration) {
     responseViewer.classList.remove('empty');
     responseViewer.innerHTML = `
         <div class="res-header">
-            <span class="res-method">${method}</span>
-            <span>${endpoint}</span>
-            <span class="res-status ${statusClass}">${status}</span>
-            ${duration ? `<span>${duration}ms</span>` : ''}
+            <span class="res-method">${escapeHtml(method)}</span>
+            <span>${escapeHtml(endpoint)}</span>
+            <span class="res-status ${statusClass}">${escapeHtml(status)}</span>
+            ${duration ? `<span>${escapeHtml(duration)}ms</span>` : ''}
         </div>
-        <div class="res-body">${bodyText}</div>
+        <div class="res-body">${escapeHtml(bodyText)}</div>
     `;
 }
 
@@ -148,22 +155,25 @@ function renderFileList(files) {
         return;
     }
 
-    fileList.innerHTML = files.map(file => `
+    fileList.innerHTML = files.map(file => {
+        const safe = escapeHtml(file);
+        return `
         <li>
             <div class="file-name">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                     <polyline points="13 2 13 9 20 9"></polyline>
                 </svg>
-                ${file}
+                ${safe}
             </div>
             <div class="file-actions">
-                <button class="btn action-btn" onclick="fetchMetadata('${file}')">Info</button>
-                <button class="btn action-btn" onclick="downloadFile('${file}')">Download</button>
-                <button class="btn action-btn delete" onclick="deleteFile('${file}')">Delete</button>
+                <button class="btn action-btn" onclick="fetchMetadata('${safe}')">Info</button>
+                <button class="btn action-btn" onclick="downloadFile('${safe}')">Download</button>
+                <button class="btn action-btn delete" onclick="deleteFile('${safe}')">Delete</button>
             </div>
         </li>
-    `).join('');
+    `;
+    }).join('');
 }
 
 // Fetch Metadata

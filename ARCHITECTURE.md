@@ -32,7 +32,7 @@ Client
   v
 ApiKeyFilter
   |
-  | validates configured file.api.key
+  | validates configured filorafs.api-key
   v
 FileController
   |
@@ -40,7 +40,7 @@ FileController
   v
 FileService
   |
-  | reads/writes local filesystem under upload.path
+  | reads/writes local filesystem under filorafs.storage-path
   v
 Configured upload directory
 ```
@@ -282,7 +282,7 @@ Client sends multipart file
   -> FileService creates upload directory if missing
   -> FileService extracts extension from original filename
   -> FileService generates UUID filename
-  -> FileService writes file to upload.path
+  -> FileService writes file to filorafs.storage-path
   -> API returns stored filename
 ```
 

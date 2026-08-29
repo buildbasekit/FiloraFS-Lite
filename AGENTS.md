@@ -23,7 +23,7 @@ Before making any code changes, read these files in order:
 9. `src/main/java/com/file/controller/FileController.java`
 10. `src/main/java/com/file/services/FileService.java`
 11. `src/main/java/com/file/filter/ApiKeyFilter.java`
-12. `src/main/java/com/file/dtos/FileStream.java`
+12. `src/main/java/com/file/dtos/FileMetadata.java`
 
 Do not assume behavior from file names alone. Verify implementation before editing.
 
@@ -52,7 +52,7 @@ src/main/java/com/file/
 ├── controller/
 │   └── FileController.java
 ├── dtos/
-│   └── FileStream.java
+│   └── FileMetadata.java
 ├── filter/
 │   └── ApiKeyFilter.java
 └── services/
@@ -247,13 +247,13 @@ Be extra careful with:
    - Current validation relies on client-provided content type.
    - Improve carefully if asked, but do not introduce heavy libraries without approval.
 
-3. `FileService#getFile`
-   - Current fallback behavior uses `default.png` if a requested file does not exist.
-   - Preserve or explicitly document any change to fallback behavior.
+3. `FileService#getFileAsResource`
+   - Returns 404 when a requested file does not exist.
+   - Ensure any changes preserve path traversal protection.
 
 4. `FileController#getFile`
-   - Current exception handling catches broad exceptions and prints stack traces.
-   - Prefer proper HTTP status responses when refactoring.
+   - Content type probing may return null; fallback to `application/octet-stream` is appropriate.
+   - Ensure the filename in `Content-Disposition` is sanitized.
 
 5. `ApiKeyFilter`
    - Applies globally as a Spring component.
