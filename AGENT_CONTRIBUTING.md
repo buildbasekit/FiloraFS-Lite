@@ -173,7 +173,7 @@ Allowed changes:
 Avoid:
 
 - Trusting raw filename input.
-- Writing outside `upload.path`.
+- Writing outside `filorafs.storage-path`.
 - Deleting directories.
 - Adding database persistence unless explicitly requested.
 - Adding cloud storage unless explicitly requested.
@@ -278,10 +278,10 @@ unless the command was actually executed and completed successfully.
 For any file-handling change, manually verify:
 
 ```txt
-[ ] Upload cannot save outside upload.path.
-[ ] Stream cannot read outside upload.path.
-[ ] Delete cannot remove files outside upload.path.
-[ ] Metadata cannot inspect files outside upload.path.
+[ ] Upload cannot save outside filorafs.storage-path.
+[ ] Stream cannot read outside filorafs.storage-path.
+[ ] Delete cannot remove files outside filorafs.storage-path.
+[ ] Metadata cannot inspect files outside filorafs.storage-path.
 [ ] Unsupported file types are rejected.
 [ ] Missing/wrong API key is rejected.
 [ ] Error responses do not leak internal paths.

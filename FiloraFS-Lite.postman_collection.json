@@ -18,7 +18,7 @@
         "header": [
           {
             "key": "X-API-KEY",
-            "value": "lvUDMvU8DYDBRGmGEt/Yb1iy5AKdLkGMniQQtvn80/hmgDr8ZucDOk1uZs5l4fZxxnQ2RgH/NY7Esp44o94Pyw==",
+            "value": "{{apiKey}}",
             "type": "text"
           }
         ],
@@ -44,6 +44,19 @@
         },
         "description": "Uploads a file to the server and returns a unique file name (UUID-based)"
       },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    pm.collectionVariables.set(\"filename\", pm.response.text());",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "response": []
     },
     {
@@ -59,7 +72,7 @@
         "header": [
           {
             "key": "X-API-KEY",
-            "value": "lvUDMvU8DYDBRGmGEt/Yb1iy5AKdLkGMniQQtvn80/hmgDr8ZucDOk1uZs5l4fZxxnQ2RgH/NY7Esp44o94Pyw==",
+            "value": "{{apiKey}}",
             "type": "text"
           }
         ],
@@ -68,13 +81,13 @@
           "formdata": []
         },
         "url": {
-          "raw": "{{baseURL}}/file/dd888afa-ab31-4c67-8871-a3b1a7a9050a.png",
+          "raw": "{{baseURL}}/file/{{filename}}",
           "host": [
             "{{baseURL}}"
           ],
           "path": [
             "file",
-            "dd888afa-ab31-4c67-8871-a3b1a7a9050a.png"
+            "{{filename}}"
           ]
         },
         "description": "Fetches and streams the file from the server with the correct MIME type. Can be used for direct downloads or displaying images/videos."
@@ -88,18 +101,18 @@
         "header": [
           {
             "key": "X-API-KEY",
-            "value": "lvUDMvU8DYDBRGmGEt/Yb1iy5AKdLkGMniQQtvn80/hmgDr8ZucDOk1uZs5l4fZxxnQ2RgH/NY7Esp44o94Pyw==",
+            "value": "{{apiKey}}",
             "type": "text"
           }
         ],
         "url": {
-          "raw": "{{baseURL}}/file/3daa8d1f-309c-45f1-82dd-9242285d2a25.png",
+          "raw": "{{baseURL}}/file/{{filename}}",
           "host": [
             "{{baseURL}}"
           ],
           "path": [
             "file",
-            "3daa8d1f-309c-45f1-82dd-9242285d2a25.png"
+            "{{filename}}"
           ]
         },
         "description": "Deletes a stored file permanently by filename. Returns `true/false` based on success."
@@ -113,7 +126,7 @@
         "header": [
           {
             "key": "X-API-KEY",
-            "value": "lvUDMvU8DYDBRGmGEt/Yb1iy5AKdLkGMniQQtvn80/hmgDr8ZucDOk1uZs5l4fZxxnQ2RgH/NY7Esp44o94Pyw==",
+            "value": "{{apiKey}}",
             "type": "text"
           }
         ],
@@ -151,19 +164,19 @@
         "header": [
           {
             "key": "X-API-KEY",
-            "value": "lvUDMvU8DYDBRGmGEt/Yb1iy5AKdLkGMniQQtvn80/hmgDr8ZucDOk1uZs5l4fZxxnQ2RgH/NY7Esp44o94Pyw==",
+            "value": "{{apiKey}}",
             "type": "text"
           }
         ],
         "url": {
-          "raw": "{{baseURL}}/file/info/3daa8d1f-309c-45f1-82dd-9242285d2a25.png",
+          "raw": "{{baseURL}}/file/info/{{filename}}",
           "host": [
             "{{baseURL}}"
           ],
           "path": [
             "file",
             "info",
-            "3daa8d1f-309c-45f1-82dd-9242285d2a25.png"
+            "{{filename}}"
           ]
         },
         "description": "Retrieves metadata about a file, such as size, type, and last modified timestamp."
@@ -199,6 +212,14 @@
     {
       "key": "baseURL",
       "value": "http://localhost:8000"
+    },
+    {
+      "key": "apiKey",
+      "value": "filorafs-local-dev-key"
+    },
+    {
+      "key": "filename",
+      "value": ""
     }
   ]
 }

@@ -43,7 +43,9 @@ This project provides a file management system. It follows basic secure practice
 
 * Controlled file upload handling  
 * UUID-based file naming  
-* API key-based access control  
+* API key-based access control protecting all file operations
+* Built-in Path Traversal protection rejecting absolute and nested paths
+* Same-origin browser API tester decoupled from API credentials  
 
 However, you should always:
 

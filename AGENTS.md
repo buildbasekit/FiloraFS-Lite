@@ -31,13 +31,13 @@ Do not assume behavior from file names alone. Verify implementation before editi
 
 ## Project Snapshot
 
-- Language: Java 21
-- Framework: Spring Boot
+- Language: Java 25
+- Framework: Spring Boot 4.1.1
 - Build tool: Maven
 - Main package: `com.file`
 - Application class: `FileUploadApiApplication`
 - Default server port: `8000`
-- Storage model: local filesystem directory configured by `upload.path`
+- Storage model: local filesystem directory configured by `filorafs.storage-path`
 - API protection: `X-API-KEY` header checked by `ApiKeyFilter`
 - Database: none
 - Current endpoints are under `/file`
@@ -59,7 +59,12 @@ src/main/java/com/file/
     └── FileService.java
 
 src/main/resources/
-└── application.properties
+├── application.properties
+└── static/
+    └── api-test/
+        ├── index.html
+        ├── styles.css
+        └── app.js
 
 src/test/java/com/file/
 └── FileUploadApiApplicationTests.java
@@ -111,8 +116,8 @@ Never commit a real API key in:
 Use placeholders such as:
 
 ```properties
-file.api.key=${FILE_API_KEY}
-upload.path=${UPLOAD_PATH}
+filorafs.api-key=${FILORAFS_API_KEY}
+filorafs.storage-path=${FILORAFS_STORAGE_PATH}
 ```
 
 or clearly fake values such as:
@@ -197,10 +202,11 @@ Current configurable properties:
 ```properties
 spring.application.name=FiloraFS-Lite
 server.port=8000
-spring.servlet.multipart.max-file-size=50MB
-spring.servlet.multipart.max-request-size=50MB
-upload.path=<path-to-your-upload-folder>
-file.api.key=<paste-here-strong-key>
+spring.config.import=optional:file:.env[.properties]
+filorafs.storage-path=${FILORAFS_STORAGE_PATH:./uploads}
+filorafs.api-key=${FILORAFS_API_KEY:filorafs-local-dev-key}
+spring.servlet.multipart.max-file-size=${FILORAFS_MAX_FILE_SIZE:10MB}
+spring.servlet.multipart.max-request-size=${FILORAFS_MAX_REQUEST_SIZE:10MB}
 ```
 
 When improving configuration:
@@ -252,6 +258,7 @@ Be extra careful with:
 5. `ApiKeyFilter`
    - Applies globally as a Spring component.
    - Allows `OPTIONS` requests through.
+   - Ignores `/api-test` endpoints via `shouldNotFilter` so developers can use the UI.
    - Uses constant-time comparison for API key equality.
 
 ---
@@ -325,7 +332,7 @@ Before finalizing any AI-generated change, verify:
 [ ] Existing endpoints still behave as documented, or breaking changes are clearly documented.
 [ ] No real secrets were added.
 [ ] Upload path is configurable.
-[ ] File path handling does not allow traversal outside upload.path.
+[ ] File path handling does not allow traversal outside filorafs.storage-path.
 [ ] Unsupported file types are rejected.
 [ ] Missing/invalid API key is rejected.
 [ ] Tests were added or updated for changed behavior.

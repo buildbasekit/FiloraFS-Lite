@@ -21,13 +21,13 @@ AI agents must treat these facts as the current baseline:
 ```txt
 Main package:        com.file
 Main class:          FileUploadApiApplication
-Framework:           Spring Boot
+Framework:           Spring Boot 4.1.1
 Build tool:          Maven
-Java version:        21
+Java version:        25
 Default port:        8000
 Storage:             local filesystem
-Upload property:     upload.path
-API key property:    file.api.key
+Upload property:     filorafs.storage-path
+API key property:    filorafs.api-key
 API key header:      X-API-KEY
 Base API route:      /file
 Database:            none
@@ -54,15 +54,15 @@ Never add real credentials, tokens, API keys, or machine-specific paths.
 Bad:
 
 ```properties
-file.api.key=my-real-production-key
-upload.path=C:/Users/Amit/Desktop/uploads
+filorafs.api-key=my-real-production-key
+filorafs.storage-path=C:/Users/Amit/Desktop/uploads
 ```
 
 Good:
 
 ```properties
-file.api.key=${FILE_API_KEY}
-upload.path=${UPLOAD_PATH}
+filorafs.api-key=${FILORAFS_API_KEY}
+filorafs.storage-path=${FILORAFS_STORAGE_PATH}
 ```
 
 or:
@@ -174,7 +174,7 @@ java.io.FileNotFoundException: C:\server\internal\path\secret.txt
 
 Do not bypass `ApiKeyFilter` unless creating an explicitly public endpoint and documenting why.
 
-The default stance is: all file APIs require `X-API-KEY`.
+The default stance is: all file APIs (`/file/**`) require `X-API-KEY`. The `/api-test` resources are allowed through `shouldNotFilter`.
 
 ---
 
@@ -209,7 +209,7 @@ Do not expand allowed types without clear use-case justification.
 When modifying download/stream logic:
 
 - Resolve the requested filename safely.
-- Never stream files outside `upload.path`.
+- Never stream files outside `filorafs.storage-path`.
 - Set correct content type.
 - Close streams safely.
 - Return 404 or controlled fallback for missing files.
@@ -224,7 +224,7 @@ If changing current `default.png` fallback behavior, document it.
 When modifying delete logic:
 
 - Resolve filename safely.
-- Delete only files under `upload.path`.
+- Delete only files under `filorafs.storage-path`.
 - Do not delete directories.
 - Return clear result/status.
 - Consider missing file behavior deliberately.
@@ -287,8 +287,8 @@ When editing `application.properties`:
 Preferred production-friendly style:
 
 ```properties
-upload.path=${UPLOAD_PATH:./uploads}
-file.api.key=${FILE_API_KEY:change-me}
+filorafs.storage-path=${FILORAFS_STORAGE_PATH:./uploads}
+filorafs.api-key=${FILORAFS_API_KEY:filorafs-local-dev-key}
 ```
 
 If using default fallback values, make sure documentation warns users to override them in production.
@@ -318,7 +318,7 @@ Important cases:
 [ ] Upload returns generated filename.
 [ ] Path traversal filename is rejected.
 [ ] Missing file behavior is controlled.
-[ ] Delete cannot escape upload.path.
+[ ] Delete cannot escape filorafs.storage-path.
 [ ] Metadata does not expose absolute path.
 ```
 
@@ -359,7 +359,7 @@ Do not introduce inconsistent response shapes without reason.
 
 Follow these conventions:
 
-- Use Java 21-compatible code.
+- Use Java 25-compatible code.
 - Use clear method names.
 - Keep controller thin.
 - Keep filesystem logic inside service or a dedicated storage helper.
@@ -424,7 +424,7 @@ Avoid refactors that:
 Run this mentally before submitting any change:
 
 ```txt
-[ ] Can a user escape upload.path using filename input?
+[ ] Can a user escape filorafs.storage-path using filename input?
 [ ] Can a user upload a dangerous file type?
 [ ] Can a user overwrite an existing file?
 [ ] Can a user delete unintended files?

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiloraFS-Lite API Tester</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h1>FiloraFS-Lite <span>Tester</span></h1>
+            </div>
+            <div class="api-key-container">
+                <label for="apiKey">X-API-KEY</label>
+                <input type="password" id="apiKey" value="filorafs-local-dev-key" placeholder="Enter API Key">
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar: Upload & Actions -->
+            <aside class="sidebar">
+                <div class="card upload-card">
+                    <h2>Upload File</h2>
+                    <form id="uploadForm" class="upload-form">
+                        <div class="file-drop-area" id="fileDropArea">
+                            <span class="file-msg">Choose a file or drag it here</span>
+                            <input type="file" id="fileInput" name="file" required>
+                        </div>
+                        <div id="fileInfo" class="file-info hidden"></div>
+                        <button type="submit" id="uploadBtn" class="btn primary-btn">Upload</button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- Main Panel: File List & Responses -->
+            <section class="content-panel">
+                <div class="card files-card">
+                    <div class="card-header">
+                        <h2>Stored Files</h2>
+                        <button id="refreshListBtn" class="btn icon-btn" title="Refresh List">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="file-list-container">
+                        <ul id="fileList" class="file-list">
+                            <!-- Files will be dynamically inserted here -->
+                            <li class="empty-state">Loading files...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Response Viewer -->
+                <div class="card response-card">
+                    <h2>Response Viewer</h2>
+                    <div id="responseViewer" class="response-viewer empty">
+                        <span class="empty-msg">No recent activity</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

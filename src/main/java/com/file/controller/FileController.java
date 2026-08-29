@@ -1,11 +1,13 @@
 package com.file.controller;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.util.StreamUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,35 +17,16 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.file.dtos.FileStream;
+import com.file.dtos.FileMetadata;
 import com.file.services.FileService;
-
-import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/file")
-//@CrossOrigin(
-//		  origins = {
-//		    "https://admin.luxorides.com",
-//		    "http://localhost:3000"
-//		  },
-//		  allowedHeaders = {
-//		    "X-API-KEY",
-//		    "Content-Type"
-//		  },
-//		  methods = {
-//		    RequestMethod.GET,
-//		    RequestMethod.POST,
-//		    RequestMethod.DELETE,
-//		    RequestMethod.OPTIONS
-//		  }
-//		)
 public class FileController {
 
-	private FileService fileService;
+	private final FileService fileService;
 
 	public FileController(FileService fileService) {
-		super();
 		this.fileService = fileService;
 	}
 
@@ -58,19 +41,23 @@ public class FileController {
 	}
 
 	@GetMapping("/{filename}")
-	public void getFile(@PathVariable String filename, HttpServletResponse response)
-			throws FileNotFoundException, IOException {
+	public ResponseEntity<Resource> getFile(@PathVariable String filename) {
+		Resource resource = this.fileService.getFileAsResource(filename);
+		
+		String contentType = "application/octet-stream";
 		try {
-			FileStream stream = this.fileService.getFile(filename);
-
-			response.setContentType(stream.getMimeType());
-
-			StreamUtils.copy(stream.getIs(), response.getOutputStream());
-			stream.getIs().close();
-			response.getOutputStream().flush();
-		} catch (Exception ex) {
-			ex.printStackTrace();
+			contentType = Files.probeContentType(resource.getFile().toPath());
+			if (contentType == null) {
+				contentType = "application/octet-stream";
+			}
+		} catch (IOException e) {
+			// fallback to octet-stream
 		}
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType(contentType))
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+				.body(resource);
 	}
 
 	@GetMapping("/list")
@@ -79,7 +66,7 @@ public class FileController {
 	}
 
 	@GetMapping("/info/{filename}")
-	public Map<String, Object> getFileInfo(@PathVariable String filename) throws IOException {
+	public FileMetadata getFileInfo(@PathVariable String filename) {
 		return fileService.getFileMetadata(filename);
 	}
 

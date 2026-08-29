@@ -1,125 +1,132 @@
 package com.file.services;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
-import com.file.dtos.FileStream;
+import com.file.config.FiloraFSProperties;
+import com.file.dtos.FileMetadata;
+
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class FileService {
-	@Value("${upload.path}")
-	private String path;
 
-	private List<String> allowedFileType = List.of("image/png", "image/jpeg", "application/pdf", "image/webp");
+	private final FiloraFSProperties properties;
+	private final Path storageRoot;
+	private final List<String> allowedFileType = List.of("image/png", "image/jpeg", "application/pdf", "image/webp");
+
+	public FileService(FiloraFSProperties properties) {
+		this.properties = properties;
+		this.storageRoot = Paths.get(properties.storagePath()).toAbsolutePath().normalize();
+	}
+
+	@PostConstruct
+	public void init() {
+		try {
+			if (!Files.exists(storageRoot)) {
+				Files.createDirectories(storageRoot);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException("Could not initialize storage location", e);
+		}
+	}
 
 	public String saveFile(MultipartFile file) throws IOException {
-
 		String mimeType = file.getContentType();
-		if (!this.allowedFileType.contains(mimeType)) {
-			throw new RuntimeException("File type not allowed: " + mimeType);
+		if (mimeType == null || !this.allowedFileType.contains(mimeType)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File type not allowed: " + mimeType);
+		}
+		if (file.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
 		}
 
-		File directory = new File(path.trim());
-		if (!directory.exists()) {
-			directory.mkdirs(); // safer than mkdir()
-		}
-
-		// Get original filename
 		String originalFilename = file.getOriginalFilename();
-
-		// Extract extension safely
 		String extension = "";
 		if (originalFilename != null && originalFilename.contains(".")) {
 			extension = originalFilename.substring(originalFilename.lastIndexOf("."));
 		}
 
-		// Generate new filename with UUID
 		String filename = UUID.randomUUID().toString() + extension;
-
-		String filepath = this.getFullPath(filename);
-		File dest = new File(filepath);
+		Path dest = resolvePathSafely(filename);
 
 		file.transferTo(dest);
-
 		return filename;
 	}
 
-	public FileStream getFile(String fileName) throws FileNotFoundException {
-		try {
-			String filepath = this.getFullPath(fileName);
-			File file = new File(filepath);
-			if (!file.exists()) {
-				String defaultFilePath = this.getFullPath("default.png");
-				file = new File(defaultFilePath);
-			}
-			String mimeType = Files.probeContentType(file.toPath());
-			if (mimeType == null) {
-				mimeType = "application/octet-stream";
-			}
-
-			return new FileStream(new FileInputStream(file), mimeType);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return null;
+	public Resource getFileAsResource(String fileName) {
+		Path filePath = resolvePathSafely(fileName);
+		if (!Files.exists(filePath)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
 		}
+		return new FileSystemResource(filePath);
 	}
 
 	public boolean deleteFile(String fileName) {
-		String filepath = path.trim() + File.separator + fileName;
-		File file = new File(filepath);
-		if (file.exists()) {
-			return file.delete();
-		} else {
+		Path filePath = resolvePathSafely(fileName);
+		try {
+			return Files.deleteIfExists(filePath);
+		} catch (IOException e) {
 			return false;
 		}
 	}
 
 	public List<String> listFiles() {
-		File folder = new File(path.trim());
-		File[] files = folder.listFiles();
-		if (files == null)
-			return Collections.emptyList();
-		return Arrays.stream(files).filter(File::isFile).map(File::getName).collect(Collectors.toList());
+		try (Stream<Path> stream = Files.list(storageRoot)) {
+			return stream.filter(Files::isRegularFile)
+					.map(path -> path.getFileName().toString())
+					.collect(Collectors.toList());
+		} catch (IOException e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not list files");
+		}
 	}
 
-	public Map<String, Object> getFileMetadata(String fileName) throws IOException {
-		File file = new File(getFullPath(fileName));
-		Map<String, Object> info = new HashMap<>();
-		info.put("name", file.getName());
-		info.put("sizeKB", file.length() / 1024);
-		info.put("mimeType", Files.probeContentType(file.toPath()));
-		info.put("lastModified", Files.getLastModifiedTime(file.toPath()).toString());
-		return info;
+	public FileMetadata getFileMetadata(String fileName) {
+		Path filePath = resolvePathSafely(fileName);
+		if (!Files.exists(filePath)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+		}
+
+		try {
+			String mimeType = Files.probeContentType(filePath);
+			if (mimeType == null) mimeType = "application/octet-stream";
+
+			String lastModified = DateTimeFormatter.ISO_INSTANT
+					.format(Files.getLastModifiedTime(filePath).toInstant());
+
+			return new FileMetadata(
+					filePath.getFileName().toString(),
+					Files.size(filePath) / 1024,
+					mimeType,
+					lastModified
+			);
+		} catch (IOException e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not read file metadata");
+		}
 	}
 
-	// private functions
-
-	private String getFullPath(String fileName) {
-		return path.trim() + File.separator + fileName;
+	private Path resolvePathSafely(String fileName) {
+		if (fileName == null || fileName.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file name");
+		}
+		Path requestedPath = storageRoot.resolve(fileName).normalize();
+		if (!requestedPath.startsWith(storageRoot)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Path traversal is not allowed");
+		}
+		return requestedPath;
 	}
-
-//	// scheduled tasks
-//	@Scheduled(cron = "0 0 1 * * ?") // every day at 1 AM
-//	public void cleanOldFiles() {
-//		File folder = new File(path.trim());
-//		long cutoff = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000); // 7 days
-//		File[] oldFiles = folder.listFiles(file -> file.isFile() && file.lastModified() < cutoff);
-//		for (File f : oldFiles)
-//			f.delete();
-//	}
-
 }

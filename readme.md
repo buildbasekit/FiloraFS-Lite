@@ -30,27 +30,38 @@ Download or clone the project from GitHub.
 ```bash
 git clone https://github.com/buildbasekit/FiloraFS-Lite
 cd FiloraFS-Lite
-````
+```
 
-### 2. Configure environment
+### 2. Run the application
+Start the Spring Boot app instantly with zero configuration required.
 
-Set required properties in `application.properties`.
+```bash
+./mvnw spring-boot:run
+```
 
-### 3. Run the application
+### 3. Test APIs
+Open the built-in API Test UI in your browser:
+**[http://localhost:8080/api-test](http://localhost:8080/api-test)**
 
-Start the Spring Boot app and begin testing APIs with **provided Postman collection**.
+Or use the **provided Postman collection**.
+
+### 4. Configure for Production
+Production overrides are managed via an optional `.env` file or directly in `application.properties`. See `.env.example` for details on securing the `X-API-KEY` and overriding the storage path.
 
 ---
 
 ## 🚀 Features
 
 * Upload files via REST API
-* API key-based authentication to secure all endpoints
+* API key-based authentication to secure all file endpoints
+* Built-in dependency-free `/api-test` browser UI
 * Stream/download files with correct MIME type
 * Delete files by name
 * List all uploaded files
 * Retrieve file metadata
-* Clean and minimal backend structure
+* Modern Java NIO file handling
+* Secure against path traversal
+* Clean and minimal backend structure (Spring Boot 4.1.1, Java 25)
 
 ---
 

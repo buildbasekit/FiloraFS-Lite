@@ -9,8 +9,8 @@ FiloraFS-Lite is a minimal Spring Boot backend for local filesystem-based file u
 ## Technology Stack
 
 ```txt
-Language:      Java 21
-Framework:     Spring Boot
+Language:      Java 25
+Framework:     Spring Boot 4.1.1
 Build Tool:    Maven
 API Style:     REST
 Storage:       Local filesystem
@@ -45,13 +45,13 @@ FileService
 Configured upload directory
 ```
 
-Every normal request is expected to include:
+Every actual file request is expected to include:
 
 ```txt
 X-API-KEY: <configured-api-key>
 ```
 
-The filter currently allows `OPTIONS` requests to pass through to support browser preflight requests.
+The filter currently allows `OPTIONS` requests to pass through to support browser preflight requests, and ignores the static frontend paths (e.g. `/api-test`).
 
 ---
 
@@ -63,7 +63,7 @@ com.file
 ├── controller
 │   └── FileController
 ├── dtos
-│   └── FileStream
+│   └── FileMetadata
 ├── filter
 │   └── ApiKeyFilter
 └── services
@@ -114,17 +114,13 @@ Controller responsibilities:
 - Accept HTTP requests.
 - Bind request path/body values.
 - Delegate file operations to `FileService`.
-- Set streaming response content type.
-- Return API responses.
+- Return API responses using `ResponseEntity<?>` and `Resource` for clean streaming.
 
 Controller should not contain deep filesystem logic.
 
 Recommended future improvements:
 
-- Use `ResponseEntity<?>` for explicit status codes.
-- Avoid broad `catch (Exception)` blocks.
-- Avoid `printStackTrace()` in request handling.
-- Return controlled error responses for missing files and validation failures.
+- Provide typed response models for all operations.
 
 ---
 
@@ -177,25 +173,15 @@ Important security note: user-supplied filenames should not be trusted for stora
 
 ## DTO Layer
 
-### `FileStream`
+### `FileMetadata`
 
 Location:
 
 ```txt
-src/main/java/com/file/dtos/FileStream.java
+src/main/java/com/file/dtos/FileMetadata.java
 ```
 
-Simple DTO carrying:
-
-- `InputStream is`
-- `String mimeType`
-
-Used by `FileService#getFile` and consumed by `FileController#getFile`.
-
-Recommended future improvement:
-
-- Consider renaming `is` to `inputStream` for clarity.
-- Ensure streams are closed safely with try-with-resources at the controller or service boundary.
+Simple Java Record used by `FileService` for returning standard metadata.
 
 ---
 
@@ -211,11 +197,12 @@ src/main/java/com/file/filter/ApiKeyFilter.java
 
 Responsibilities:
 
-- Read configured API key from `file.api.key`.
+- Read configured API key from `filorafs.api-key`.
 - Read request API key from `X-API-KEY`.
 - Compare keys using `MessageDigest.isEqual`.
 - Reject unauthorized requests with HTTP 401.
 - Allow `OPTIONS` requests to pass through.
+- Allow `/api-test` and static resources to pass through (it only secures `/file`).
 
 Current behavior:
 
@@ -226,7 +213,7 @@ Matching X-API-KEY      -> request continues
 OPTIONS request         -> request continues
 ```
 
-Important note: because the filter is registered as a Spring `@Component`, it applies globally. If public endpoints are added later, the filter behavior must be adjusted deliberately.
+Important note: because the filter is registered as a Spring `@Component`, it applies globally. We override `shouldNotFilter` to ensure it only guards `/file` endpoints, allowing the `/api-test` UI to be accessible to developers.
 
 ---
 
@@ -243,13 +230,14 @@ Current properties:
 ```properties
 spring.application.name=FiloraFS-Lite
 server.port=8000
-spring.servlet.multipart.max-file-size=50MB
-spring.servlet.multipart.max-request-size=50MB
-upload.path=<path-to-your-upload-folder>
-file.api.key=<paste-here-strong-key>
+spring.config.import=optional:file:.env[.properties]
+filorafs.storage-path=${FILORAFS_STORAGE_PATH:./uploads}
+filorafs.api-key=${FILORAFS_API_KEY:filorafs-local-dev-key}
+spring.servlet.multipart.max-file-size=${FILORAFS_MAX_FILE_SIZE:10MB}
+spring.servlet.multipart.max-request-size=${FILORAFS_MAX_REQUEST_SIZE:10MB}
 ```
 
-### `upload.path`
+### `filorafs.storage-path`
 
 Controls where files are stored.
 
@@ -261,7 +249,7 @@ Production expectations:
 - Avoid using source-code directories.
 - Back up this directory if uploaded files are important.
 
-### `file.api.key`
+### `filorafs.api-key`
 
 Controls API access.
 
@@ -320,19 +308,17 @@ Flow:
 ```txt
 Client requests stored filename
   -> ApiKeyFilter validates X-API-KEY
-  -> FileController.getFile calls FileService.getFile
-  -> FileService resolves file path
-  -> If file is missing, current implementation tries default.png
-  -> FileService probes MIME type
-  -> FileController writes InputStream to HttpServletResponse
+  -> FileController.getFile calls FileService.getFileAsResource
+  -> FileService safely resolves file path using NIO
+  -> If file exists, returning Resource to Spring MVC
+  -> FileController returns ResponseEntity<Resource> to Spring MVC for streaming
 ```
 
 Security-sensitive points:
 
-- Filename must not escape `upload.path`.
-- Missing-file behavior must be documented.
-- Stream must be closed safely.
-- Response should not expose stack traces.
+- Filename must not escape `filorafs.storage-path`.
+- Path traversal is actively blocked using `.normalize().startsWith(root)`.
+- Stream is handled by Spring MVC internally.
 
 ---
 
@@ -349,15 +335,14 @@ Flow:
 Client requests deletion
   -> ApiKeyFilter validates X-API-KEY
   -> FileController.deleteFile delegates to FileService
-  -> FileService resolves path
+  -> FileService resolves and normalizes path safely
   -> If file exists, delete it
   -> API returns true/false
 ```
 
 Security-sensitive points:
 
-- Path traversal must be blocked.
-- Deleting `default.png` or protected files may need policy checks if added.
+- Path traversal is actively blocked.
 - A boolean response is simple but not very expressive.
 
 ---
@@ -374,7 +359,7 @@ Flow:
 ```txt
 Client requests list
   -> ApiKeyFilter validates X-API-KEY
-  -> FileService reads upload.path
+  -> FileService reads storage path via Java NIO
   -> Files are filtered to normal files
   -> API returns names
 ```
@@ -401,12 +386,11 @@ Client requests file info
   -> ApiKeyFilter validates X-API-KEY
   -> FileService resolves path
   -> FileService reads size, MIME type, last modified time
-  -> API returns metadata map
+  -> API returns FileMetadata record
 ```
 
 Recommended future improvement:
 
-- Use a typed response DTO instead of raw `Map`.
 - Return 404 if file is missing.
 
 ---
@@ -416,9 +400,10 @@ Recommended future improvement:
 - Small and easy to understand.
 - No database dependency.
 - UUID-based upload filenames reduce collision risk.
-- API-key filter is simple and explicit.
-- Multipart size limits are configured.
-- Postman collection documents core API flow.
+- API-key filter is simple and secures the `/file` prefix effectively.
+- Configuration is centralized via `@ConfigurationProperties` and `.env` support.
+- Fully modernized to Java NIO `Path` APIs preventing traversal natively.
+- Comes with a browser-based tester (`/api-test`) with no JS framework bloat.
 - Good starter for small projects and learning.
 
 ---
@@ -427,28 +412,13 @@ Recommended future improvement:
 
 AI agents must be aware of these risks before editing:
 
-1. Path handling is string-based.
-   - Any direct use of `{filename}` can be risky without normalization and base-path checks.
-
-2. MIME validation uses `MultipartFile#getContentType()`.
+1. MIME validation uses `MultipartFile#getContentType()`.
    - This can be client-controlled.
 
-3. `getFile` catches exceptions and can return `null`.
-   - This may cause unclear controller behavior.
-
-4. Controller catches broad exceptions and prints stack traces.
-   - This is not production-grade error handling.
-
-5. Raw `List` and raw `Map` are used.
-   - Prefer typed generics in future changes.
-
-6. API key examples in shared files must remain placeholders.
-   - Do not commit real keys.
-
-7. No pagination exists for `/file/list`.
+2. No pagination exists for `/file/list`.
    - Large upload folders may degrade performance.
 
-8. No metadata persistence exists.
+3. No metadata persistence exists.
    - Metadata is derived from filesystem state at request time.
 
 ---
@@ -487,27 +457,7 @@ Those belong in a heavier/pro edition or a separate project decision.
 
 These are safe roadmap ideas, not mandatory changes:
 
-1. Introduce typed DTOs:
-
-```txt
-UploadResponse
-FileInfoResponse
-ErrorResponse
-```
-
-2. Introduce a safe path resolver:
-
-```txt
-StoragePathResolver
-```
-
-Responsibilities:
-
-- Normalize paths.
-- Resolve filenames against configured root.
-- Reject traversal attempts.
-
-3. Introduce custom exceptions:
+1. Introduce custom exceptions:
 
 ```txt
 FileNotAllowedException
@@ -516,16 +466,12 @@ InvalidFilenameException
 StorageException
 ```
 
-4. Add a global exception handler:
+2. Add a global exception handler:
 
 ```txt
 @RestControllerAdvice
 GlobalExceptionHandler
 ```
-
-5. Replace raw maps/lists with typed generics.
-
-6. Add filesystem tests using JUnit temporary directories.
 
 ---
 
