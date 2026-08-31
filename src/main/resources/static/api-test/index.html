@@ -1,76 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FiloraFS-Lite API Tester</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="The BuildBaseKit API console for FiloraFS-Lite v2. Test local file uploads, metadata, downloads, and deletion.">
+  <meta name="theme-color" content="#101313">
+  <title>FiloraFS-Lite API Console · v2 · BuildBaseKit</title>
+  <link rel="icon" type="image/png" href="assets/buildbasekit-logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <h1>FiloraFS-Lite <span>Tester</span></h1>
-            </div>
-            <div class="api-key-container">
-                <label for="apiKey">X-API-KEY</label>
-                <input type="password" id="apiKey" value="filorafs-local-dev-key" placeholder="Enter API Key">
-            </div>
-        </header>
-
-        <div class="main-content">
-            <!-- Sidebar: Upload & Actions -->
-            <aside class="sidebar">
-                <div class="card upload-card">
-                    <h2>Upload File</h2>
-                    <form id="uploadForm" class="upload-form">
-                        <div class="file-drop-area" id="fileDropArea">
-                            <span class="file-msg">Choose a file or drag it here</span>
-                            <input type="file" id="fileInput" name="file" required>
-                        </div>
-                        <div id="fileInfo" class="file-info hidden"></div>
-                        <button type="submit" id="uploadBtn" class="btn primary-btn">Upload</button>
-                    </form>
-                </div>
-            </aside>
-
-            <!-- Main Panel: File List & Responses -->
-            <section class="content-panel">
-                <div class="card files-card">
-                    <div class="card-header">
-                        <h2>Stored Files</h2>
-                        <button id="refreshListBtn" class="btn icon-btn" title="Refresh List">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <polyline points="1 20 1 14 7 14"></polyline>
-                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="file-list-container">
-                        <ul id="fileList" class="file-list">
-                            <!-- Files will be dynamically inserted here -->
-                            <li class="empty-state">Loading files...</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Response Viewer -->
-                <div class="card response-card">
-                    <h2>Response Viewer</h2>
-                    <div id="responseViewer" class="response-viewer empty">
-                        <span class="empty-msg">No recent activity</span>
-                    </div>
-                </div>
-            </section>
-        </div>
+  <header class="topbar">
+    <a class="brand" href="https://buildbasekit.com/" aria-label="BuildBaseKit website">
+      <span class="brand-mark">
+        <img src="assets/buildbasekit-logo.png" alt="" width="44" height="44">
+      </span>
+      <span class="brand-wordmark"><strong>BuildBaseKit</strong><em>FiloraFS-Lite API Console</em></span>
+    </a>
+    <div class="topbar-meta">
+      <a class="docs-link" href="https://buildbasekit.com/docs/filorafs-lite/overview/">Documentation <span aria-hidden="true">↗</span></a>
+      <span class="version-tag" aria-label="Version 2">v2</span>
+      <button id="themeToggle" class="icon-button" type="button" aria-label="Switch to light theme" title="Switch color theme">
+        <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path></svg>
+        <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 14.3A8.8 8.8 0 0 1 9.7 3.4 8.8 8.8 0 1 0 20.6 14.3Z"></path></svg>
+      </button>
     </div>
-    
-    <script src="app.js"></script>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">BuildBaseKit / File storage foundation</p>
+        <h1 id="pageTitle">FiloraFS-Lite <span class="hero-version">v2</span></h1>
+        <p class="hero-copy">Your file API, in view. Upload, inspect, download, and delete files from one focused developer console.</p>
+        <ul class="platform-tags" aria-label="Platform">
+          <li>Spring Boot 4.1.1</li>
+          <li>Java 25 LTS</li>
+          <li>Local filesystem</li>
+        </ul>
+      </div>
+      <button id="refreshHeroButton" class="button secondary" type="button">
+        <span aria-hidden="true">↻</span> Refresh stored files
+      </button>
+    </section>
+
+    <div id="workspace" class="workbench">
+      <aside class="panel settings-panel" aria-labelledby="requestContextTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Environment</p>
+            <h2 id="requestContextTitle">Request context</h2>
+          </div>
+          <span class="live-label"><i aria-hidden="true"></i> Same origin</span>
+        </div>
+
+        <div class="settings-group">
+          <p class="group-label"><span>01</span> Authentication</p>
+          <label for="apiKey">X-API-KEY</label>
+          <div class="secret-field">
+            <input id="apiKey" type="password" value="filorafs-local-dev-key" autocomplete="off" spellcheck="false">
+            <button id="toggleApiKey" class="text-button" type="button" aria-label="Show API key">Show</button>
+          </div>
+          <p class="field-note">The local default is convenient for development only. This value stays in page memory.</p>
+        </div>
+
+        <div class="settings-group">
+          <p class="group-label"><span>02</span> Upload</p>
+          <form id="uploadForm" class="upload-form">
+            <label id="fileDropArea" class="file-drop-area" for="fileInput">
+              <span class="drop-icon" aria-hidden="true">↑</span>
+              <strong>Choose a file</strong>
+              <span>or drag it here</span>
+              <input id="fileInput" name="file" type="file" accept=".png,.jpg,.jpeg,.pdf,.webp" required>
+            </label>
+            <div id="fileInfo" class="file-info" hidden></div>
+            <p class="field-note">PNG, JPEG, PDF, or WebP · maximum 10 MB by default</p>
+            <button id="uploadButton" class="button primary full-width" type="submit">Upload selected file <span aria-hidden="true">→</span></button>
+          </form>
+        </div>
+      </aside>
+
+      <section class="panel files-panel" aria-labelledby="storedFilesTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Storage</p>
+            <h2 id="storedFilesTitle">Stored files</h2>
+          </div>
+          <button id="refreshListButton" class="icon-button" type="button" aria-label="Refresh stored files" title="Refresh stored files">↻</button>
+        </div>
+        <div class="column-labels" aria-hidden="true"><span>Filename</span><span>Actions</span></div>
+        <ul id="fileList" class="file-list" aria-live="polite">
+          <li class="empty-state">Loading stored files…</li>
+        </ul>
+      </section>
+
+      <aside class="panel response-panel" aria-labelledby="responseTitle">
+        <div class="panel-heading response-heading">
+          <div>
+            <p class="eyebrow">Inspector</p>
+            <h2 id="responseTitle">Latest response</h2>
+          </div>
+          <span id="responseStatus" class="response-status idle">Idle</span>
+        </div>
+        <div id="responseMeta" class="response-meta" hidden>
+          <span id="responseMethod" class="method-badge">GET</span>
+          <code id="responseEndpoint"></code>
+          <span id="responseDuration"></span>
+        </div>
+        <pre id="responseBody" class="response-body">Run an operation to inspect its status and response body.</pre>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="page-footer">
+    <a class="footer-brand" href="https://buildbasekit.com/">
+      <span class="footer-mark"><img src="assets/buildbasekit-logo.png" alt="" width="24" height="24"></span>
+      <span>Built with <strong>BuildBaseKit</strong></span>
+    </a>
+    <span>FiloraFS-Lite v2 · Local filesystem foundation</span>
+    <a href="https://github.com/buildbasekit/FiloraFS-Lite">View on GitHub <span aria-hidden="true">↗</span></a>
+  </footer>
 </body>
 </html>

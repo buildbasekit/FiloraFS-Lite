@@ -9,36 +9,35 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.file</groupId>
-	<artifactId>FiloraFS-Lite</artifactId>
-	<version>1.0</version>
+	<artifactId>filorafs-lite</artifactId>
+	<version>1.0.0</version>
 	<name>FiloraFS-Lite</name>
-	<description>File upload APIs</description>
-	<url/>
+	<description>BuildBaseKit Spring Boot boilerplate for secure local file storage</description>
+	<url>https://buildbasekit.com/boilerplates/filora-fs-lite/</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/license/mit</url>
+		</license>
 	</licenses>
-	<developers>
-		<developer/>
-	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
+		<connection>scm:git:https://github.com/buildbasekit/FiloraFS-Lite.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/buildbasekit/FiloraFS-Lite.git</developerConnection>
 		<tag/>
-		<url/>
+		<url>https://github.com/buildbasekit/FiloraFS-Lite</url>
 	</scm>
 	<properties>
 		<java.version>25</java.version>
 	</properties>
 	<dependencies>
-	<dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

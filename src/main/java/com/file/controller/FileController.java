@@ -1,12 +1,13 @@
 package com.file.controller;
 
-import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,7 @@ public class FileController {
 	}
 
 	@PostMapping
-	public String saveFile(@RequestPart MultipartFile file) throws IOException {
+	public String saveFile(@RequestPart("file") MultipartFile file) {
 		return this.fileService.saveFile(file);
 	}
 
@@ -43,20 +44,13 @@ public class FileController {
 	@GetMapping("/{filename}")
 	public ResponseEntity<Resource> getFile(@PathVariable String filename) {
 		Resource resource = this.fileService.getFileAsResource(filename);
-		
-		String contentType = "application/octet-stream";
-		try {
-			contentType = Files.probeContentType(resource.getFile().toPath());
-			if (contentType == null) {
-				contentType = "application/octet-stream";
-			}
-		} catch (IOException e) {
-			// fallback to octet-stream
-		}
 
 		return ResponseEntity.ok()
-				.contentType(MediaType.parseMediaType(contentType))
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+				.contentType(MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM))
+				.header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+						.filename(resource.getFilename(), StandardCharsets.UTF_8)
+						.build()
+						.toString())
 				.body(resource);
 	}
 

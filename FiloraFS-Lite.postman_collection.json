@@ -1,19 +1,28 @@
 {
   "info": {
     "_postman_id": "a4cec336-a594-4507-a5f2-3eaf741fefcd",
-    "name": "FiloraFS-Lite",
-    "description": "# 📂 FiloraFS-Lite API Collection — BuildBaseKit\n\nThis collection showcases a **lightweight file management system** built with Spring Boot.  \nDesigned for developers who want a clean, production-ready way to handle file uploads, storage, and retrieval without building everything from scratch.\n\n---\n\n## ⚡ What’s Included\n\n- File Upload (UUID-based naming)\n    \n- File Streaming (images, videos, downloads)\n    \n- File Deletion\n    \n- File Listing\n    \n- File Metadata (size, type, timestamps)\n    \n\n---\n\n## 🚀 Quick Flow\n\nUpload file → `/file`  \nGet filename (UUID returned)  \nAccess file → `/file/{filename}`  \nView all files → `/file/list`  \nGet file info → `/file/info/{filename}`  \nDelete file → `/file/{filename}`\n\n---\n\n## 🔑 Setup\n\nSet `base_url` → `http://localhost:8000`  \nAdd header → `X-API-KEY:`\n\n---\n\n## 🌐 BuildBaseKit\n\nThis collection is part of BuildBaseKit — production-ready backend boilerplates.  \n👉 [https://buildbasekit.com](https://buildbasekit.com/)\n\n---\n\nRun requests in sequence for best experience.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "47320634",
-    "_collection_link": "https://go.postman.co/collection/47320634-a4cec336-a594-4507-a5f2-3eaf741fefcd?source=collection_link"
+    "name": "BuildBaseKit · FiloraFS-Lite v2",
+    "version": "2.0.0",
+    "description": "FiloraFS-Lite v2 by BuildBaseKit — a lightweight local filesystem foundation on Spring Boot 4.1.1 and Java 25 LTS.\n\nStart the application with the Maven wrapper; no .env file is required. Use http://localhost:8080/api-test for the branded browser console, or choose a supported file in Upload File and run this collection in order: upload → list → metadata → download → delete. Upload captures the generated stored filename automatically.\n\nThe /file routes and X-API-KEY contract are unchanged. The included API key is for local development only; override apiKey when testing a deployed environment.\n\n[Website](https://buildbasekit.com/boilerplates/filora-fs-lite/) · [Documentation](https://buildbasekit.com/docs/filorafs-lite/overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "Upload File",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    pm.collectionVariables.set(\"filename\", pm.response.text().trim());",
+              "}"
+            ]
+          }
+        }
+      ],
       "request": {
-        "auth": {
-          "type": "apikey"
-        },
         "method": "POST",
         "header": [
           {
@@ -28,46 +37,27 @@
             {
               "key": "file",
               "type": "file",
-              "uuid": "7c6a5620-63c3-45dc-a6e5-4cbc0061ec1c",
-              "src": ""
+              "src": "",
+              "description": "Choose a PNG, JPEG, PDF, or WebP file."
             }
           ]
         },
         "url": {
-          "raw": "{{baseURL}}/file",
+          "raw": "{{baseUrl}}/file",
           "host": [
-            "{{baseURL}}"
+            "{{baseUrl}}"
           ],
           "path": [
             "file"
           ]
         },
-        "description": "Uploads a file to the server and returns a unique file name (UUID-based)"
+        "description": "Uploads multipart field `file` and returns a UUID-based stored filename. The test script saves it as `filename`."
       },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "if (pm.response.code === 200) {",
-              "    pm.collectionVariables.set(\"filename\", pm.response.text());",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
       "response": []
     },
     {
-      "name": "Stream File",
-      "protocolProfileBehavior": {
-        "disableBodyPruning": true
-      },
+      "name": "List Files",
       "request": {
-        "auth": {
-          "type": "noauth"
-        },
         "method": "GET",
         "header": [
           {
@@ -76,21 +66,68 @@
             "type": "text"
           }
         ],
-        "body": {
-          "mode": "formdata",
-          "formdata": []
-        },
         "url": {
-          "raw": "{{baseURL}}/file/{{filename}}",
+          "raw": "{{baseUrl}}/file/list",
           "host": [
-            "{{baseURL}}"
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "file",
+            "list"
+          ]
+        },
+        "description": "Returns a sorted JSON array of stored filenames."
+      },
+      "response": []
+    },
+    {
+      "name": "Get File Metadata",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "{{apiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/file/info/{{filename}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "file",
+            "info",
+            "{{filename}}"
+          ]
+        },
+        "description": "Returns the stored name, size in KB, filename-derived media type, and last-modified timestamp."
+      },
+      "response": []
+    },
+    {
+      "name": "Download File",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "{{apiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/file/{{filename}}",
+          "host": [
+            "{{baseUrl}}"
           ],
           "path": [
             "file",
             "{{filename}}"
           ]
         },
-        "description": "Fetches and streams the file from the server with the correct MIME type. Can be used for direct downloads or displaying images/videos."
+        "description": "Streams the stored file as a Spring Resource with attachment headers. Use Postman's Save Response to save the bytes."
       },
       "response": []
     },
@@ -106,120 +143,35 @@
           }
         ],
         "url": {
-          "raw": "{{baseURL}}/file/{{filename}}",
+          "raw": "{{baseUrl}}/file/{{filename}}",
           "host": [
-            "{{baseURL}}"
+            "{{baseUrl}}"
           ],
           "path": [
             "file",
             "{{filename}}"
           ]
         },
-        "description": "Deletes a stored file permanently by filename. Returns `true/false` based on success."
+        "description": "Deletes the stored file. Returns `true` when deleted and `false` when it was already missing."
       },
       "response": []
-    },
-    {
-      "name": "File List",
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "X-API-KEY",
-            "value": "{{apiKey}}",
-            "type": "text"
-          }
-        ],
-        "url": {
-          "raw": "{{baseURL}}/file/list",
-          "host": [
-            "{{baseURL}}"
-          ],
-          "path": [
-            "file",
-            "list"
-          ]
-        },
-        "description": "Returns a JSON array of all stored filenames. Useful for building file pickers, dashboards, or admin panels."
-      },
-      "response": []
-    },
-    {
-      "name": "Get File Info",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              ""
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "X-API-KEY",
-            "value": "{{apiKey}}",
-            "type": "text"
-          }
-        ],
-        "url": {
-          "raw": "{{baseURL}}/file/info/{{filename}}",
-          "host": [
-            "{{baseURL}}"
-          ],
-          "path": [
-            "file",
-            "info",
-            "{{filename}}"
-          ]
-        },
-        "description": "Retrieves metadata about a file, such as size, type, and last modified timestamp."
-      },
-      "response": []
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
     }
   ],
   "variable": [
     {
-      "key": "baseURL",
-      "value": "http://localhost:8000"
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
     },
     {
       "key": "apiKey",
-      "value": "filorafs-local-dev-key"
+      "value": "filorafs-local-dev-key",
+      "type": "string"
     },
     {
       "key": "filename",
-      "value": ""
+      "value": "",
+      "type": "string"
     }
   ]
 }

@@ -1,77 +1,20 @@
-# 🤝 Contributing to FiloraFS-Lite
+# Contributing
 
-Thanks for your interest in contributing!
+Keep contributions focused and easy to review. FiloraFS-Lite prioritizes simple, readable Spring Boot code and a small local-storage scope.
 
-FiloraFS-Lite is part of BuildBaseKit — focused on clean, production-ready backend boilerplates. Contributions are welcome, but we prioritize **clarity, simplicity, and real-world usefulness**.
+- Follow the existing [architecture](ARCHITECTURE.md); let Spring handle framework infrastructure.
+- Preserve API compatibility and [security boundaries](SECURITY.md).
+- Avoid unnecessary dependencies, abstractions, and unrelated refactors. Discuss broader features before implementing them.
+- Add or update tests when behavior changes; use temporary storage and synthetic credentials.
+- Verify API changes through the included [Postman collection](FiloraFS-Lite.postman_collection.json) or browser tester.
+- Keep detailed product documentation on [BuildBaseKit](https://buildbasekit.com/docs/filorafs-lite/overview/), and update the relevant source when behavior changes.
 
----
+Before submitting:
 
-## 🚀 How to Contribute
+```bash
+./mvnw clean verify
+```
 
-### 1. Fork the Repository
-Create your own fork and clone it locally.
+Use `.\mvnw.cmd` on Windows. See [README.md](README.md) for the quick start.
 
-### 2. Create a Branch
-Use a clear naming convention:
-- feature/file-validation
-- fix/upload-bug
-- docs/readme-update
-
-### 3. Make Changes
-Keep changes:
-- minimal
-- focused
-- well-structured
-
-### 4. Test Your Changes
-Ensure:
-- APIs work as expected
-- No existing functionality is broken
-
-### 5. Submit a Pull Request
-Provide:
-- clear description
-- what problem it solves
-- any relevant screenshots or examples
-
----
-
-## 📌 Contribution Guidelines
-
-- Follow existing project structure and naming
-- Avoid unnecessary complexity
-- Write clean and readable code
-- Keep commits meaningful (no "fix stuff")
-
----
-
-## 💡 What You Can Contribute
-
-- Bug fixes
-- Performance improvements
-- Better validation (file type, size, security)
-- API enhancements
-- Documentation improvements
-
----
-
-## 🚫 What Not to Do
-
-- Do not introduce heavy frameworks or over-engineering
-- Do not break existing APIs without discussion
-- Do not commit sensitive data
-
----
-
-## 🧠 Philosophy
-
-> Simple > Clever  
-> Maintainable > Complex  
-> Practical > Perfect  
-
----
-
-## 🌐 BuildBaseKit
-
-This project is part of BuildBaseKit — production-ready backend starters.  
-👉 https://buildbasekit.com
+Explain the problem, what changed, and how you verified it in your pull request. Never include real secrets or runtime uploads. Report vulnerabilities privately using [SECURITY.md](SECURITY.md). AI-assisted contributions follow [AGENTS.md](AGENTS.md) and remain the contributor's responsibility to review.

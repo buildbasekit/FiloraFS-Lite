@@ -1,258 +1,275 @@
-const BASE_URL = '/file';
+const API_BASE = "/file";
 
-// Utility: HTML-escape untrusted strings before innerHTML interpolation
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = String(str);
-    return div.innerHTML;
+const elements = {
+  apiKey: document.getElementById("apiKey"),
+  fileDropArea: document.getElementById("fileDropArea"),
+  fileInfo: document.getElementById("fileInfo"),
+  fileInput: document.getElementById("fileInput"),
+  fileList: document.getElementById("fileList"),
+  refreshHeroButton: document.getElementById("refreshHeroButton"),
+  refreshListButton: document.getElementById("refreshListButton"),
+  responseBody: document.getElementById("responseBody"),
+  responseDuration: document.getElementById("responseDuration"),
+  responseEndpoint: document.getElementById("responseEndpoint"),
+  responseMeta: document.getElementById("responseMeta"),
+  responseMethod: document.getElementById("responseMethod"),
+  responseStatus: document.getElementById("responseStatus"),
+  themeToggle: document.getElementById("themeToggle"),
+  toggleApiKey: document.getElementById("toggleApiKey"),
+  uploadButton: document.getElementById("uploadButton"),
+  uploadForm: document.getElementById("uploadForm")
+};
+
+function headers() {
+  return { "X-API-KEY": elements.apiKey.value.trim() };
 }
 
-// DOM Elements
-const apiKeyInput = document.getElementById('apiKey');
-const uploadForm = document.getElementById('uploadForm');
-const fileInput = document.getElementById('fileInput');
-const fileDropArea = document.getElementById('fileDropArea');
-const fileInfo = document.getElementById('fileInfo');
-const uploadBtn = document.getElementById('uploadBtn');
-const refreshListBtn = document.getElementById('refreshListBtn');
-const fileList = document.getElementById('fileList');
-const responseViewer = document.getElementById('responseViewer');
-
-// Utility: Get Headers
-function getHeaders() {
-    return {
-        'X-API-KEY': apiKeyInput.value.trim()
-    };
+function setBusy(isBusy) {
+  document.body.classList.toggle("is-busy", isBusy);
+  document.querySelectorAll("button").forEach((button) => {
+    if (button !== elements.themeToggle && button !== elements.toggleApiKey) {
+      button.disabled = isBusy;
+    }
+  });
 }
 
-// Utility: Update Response Viewer
 function showResponse(method, endpoint, status, body, duration) {
-    const statusClass = status >= 200 && status < 300 ? 'status-ok' : status >= 400 ? 'status-error' : 'status-warn';
-    let bodyText = typeof body === 'object' ? JSON.stringify(body, null, 2) : body;
-    
-    // If it's a blob/buffer or too long
-    if (body instanceof Blob) {
-        bodyText = `[Blob data: ${body.size} bytes, type: ${body.type}]`;
-    }
+  const numericStatus = Number(status);
+  const statusKind = Number.isFinite(numericStatus)
+    ? (numericStatus >= 200 && numericStatus < 300 ? "success" : "error")
+    : "error";
 
-    responseViewer.classList.remove('empty');
-    responseViewer.innerHTML = `
-        <div class="res-header">
-            <span class="res-method">${escapeHtml(method)}</span>
-            <span>${escapeHtml(endpoint)}</span>
-            <span class="res-status ${statusClass}">${escapeHtml(status)}</span>
-            ${duration ? `<span>${escapeHtml(duration)}ms</span>` : ''}
-        </div>
-        <div class="res-body">${escapeHtml(bodyText)}</div>
-    `;
+  elements.responseMeta.hidden = false;
+  elements.responseMethod.textContent = method;
+  elements.responseMethod.dataset.method = method.toLowerCase();
+  elements.responseEndpoint.textContent = endpoint;
+  elements.responseDuration.textContent = duration === undefined ? "" : `${duration} ms`;
+  elements.responseStatus.textContent = String(status);
+  elements.responseStatus.className = `response-status ${statusKind}`;
+  elements.responseBody.textContent = typeof body === "string" ? body : JSON.stringify(body, null, 2);
 }
 
-// Utility: Show Loading
-function setLoading(isLoading) {
-    if (isLoading) {
-        document.body.style.cursor = 'wait';
-        uploadBtn.disabled = true;
-    } else {
-        document.body.style.cursor = 'default';
-        uploadBtn.disabled = false;
-    }
+async function readBody(response) {
+  const text = await response.text();
+  if (!text) {
+    return "(empty response)";
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
-// Handle File Drop Area
-fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const sizeKB = (file.size / 1024).toFixed(2);
-        fileInfo.textContent = `Selected: ${file.name} (${sizeKB} KB, ${file.type || 'Unknown Type'})`;
-        fileInfo.classList.remove('hidden');
-    } else {
-        fileInfo.classList.add('hidden');
-    }
-});
-
-fileDropArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    fileDropArea.classList.add('drag-over');
-});
-
-fileDropArea.addEventListener('dragleave', () => {
-    fileDropArea.classList.remove('drag-over');
-});
-
-fileDropArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    fileDropArea.classList.remove('drag-over');
-    if (e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        fileInput.dispatchEvent(new Event('change'));
-    }
-});
-
-// Upload File
-uploadForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!fileInput.files[0]) return;
-
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-
-    setLoading(true);
-    const start = performance.now();
-    try {
-        const res = await fetch(BASE_URL, {
-            method: 'POST',
-            headers: getHeaders(), // Don't set Content-Type for FormData
-            body: formData
-        });
-        const duration = Math.round(performance.now() - start);
-        const text = await res.text();
-        
-        showResponse('POST', BASE_URL, res.status, text, duration);
-        
-        if (res.ok) {
-            uploadForm.reset();
-            fileInfo.classList.add('hidden');
-            fetchFiles(); // Refresh list
-        }
-    } catch (err) {
-        showResponse('POST', BASE_URL, 'ERROR', err.message);
-    } finally {
-        setLoading(false);
-    }
-});
-
-// List Files
-async function fetchFiles() {
-    setLoading(true);
-    const start = performance.now();
-    try {
-        const res = await fetch(`${BASE_URL}/list`, {
-            headers: getHeaders()
-        });
-        const duration = Math.round(performance.now() - start);
-        
-        if (!res.ok) {
-            const text = await res.text();
-            showResponse('GET', `${BASE_URL}/list`, res.status, text, duration);
-            fileList.innerHTML = `<li class="empty-state">Failed to load files (Status: ${res.status})</li>`;
-            return;
-        }
-
-        const files = await res.json();
-        showResponse('GET', `${BASE_URL}/list`, res.status, files, duration);
-        renderFileList(files);
-    } catch (err) {
-        showResponse('GET', `${BASE_URL}/list`, 'ERROR', err.message);
-        fileList.innerHTML = `<li class="empty-state">Network Error</li>`;
-    } finally {
-        setLoading(false);
-    }
+async function apiRequest(method, endpoint, options = {}) {
+  const started = performance.now();
+  const response = await fetch(endpoint, {
+    method,
+    headers: { ...headers(), ...(options.headers || {}) },
+    body: options.body
+  });
+  const body = await readBody(response);
+  if (options.showResponse !== false || !response.ok) {
+    showResponse(method, endpoint, response.status, body, Math.round(performance.now() - started));
+  }
+  return { response, body };
 }
 
-function renderFileList(files) {
-    if (!files || files.length === 0) {
-        fileList.innerHTML = `<li class="empty-state">No files stored.</li>`;
-        return;
-    }
-
-    fileList.innerHTML = files.map(file => {
-        const safe = escapeHtml(file);
-        return `
-        <li>
-            <div class="file-name">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                    <polyline points="13 2 13 9 20 9"></polyline>
-                </svg>
-                ${safe}
-            </div>
-            <div class="file-actions">
-                <button class="btn action-btn" onclick="fetchMetadata('${safe}')">Info</button>
-                <button class="btn action-btn" onclick="downloadFile('${safe}')">Download</button>
-                <button class="btn action-btn delete" onclick="deleteFile('${safe}')">Delete</button>
-            </div>
-        </li>
-    `;
-    }).join('');
+function emptyList(message) {
+  const item = document.createElement("li");
+  item.className = "empty-state";
+  item.textContent = message;
+  elements.fileList.replaceChildren(item);
 }
 
-// Fetch Metadata
-window.fetchMetadata = async (filename) => {
-    const endpoint = `${BASE_URL}/info/${filename}`;
-    const start = performance.now();
-    try {
-        const res = await fetch(endpoint, { headers: getHeaders() });
-        const duration = Math.round(performance.now() - start);
-        const text = await res.text();
-        try {
-            const json = JSON.parse(text);
-            showResponse('GET', endpoint, res.status, json, duration);
-        } catch {
-            showResponse('GET', endpoint, res.status, text, duration);
-        }
-    } catch (err) {
-        showResponse('GET', endpoint, 'ERROR', err.message);
+function actionButton(label, className, handler) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `file-action ${className}`;
+  button.textContent = label;
+  button.addEventListener("click", handler);
+  return button;
+}
+
+function renderFiles(files) {
+  if (!Array.isArray(files) || files.length === 0) {
+    emptyList("No files stored yet.");
+    return;
+  }
+
+  const items = files.map((filename) => {
+    const item = document.createElement("li");
+    const nameBlock = document.createElement("div");
+    const icon = document.createElement("span");
+    const name = document.createElement("span");
+    const actions = document.createElement("div");
+
+    nameBlock.className = "file-name";
+    icon.className = "file-icon";
+    icon.textContent = "FILE";
+    name.textContent = filename;
+    actions.className = "file-actions";
+    actions.append(
+      actionButton("Info", "info", () => fetchMetadata(filename)),
+      actionButton("Download", "download", () => downloadFile(filename)),
+      actionButton("Delete", "delete", () => deleteFile(filename))
+    );
+    nameBlock.append(icon, name);
+    item.append(nameBlock, actions);
+    return item;
+  });
+
+  elements.fileList.replaceChildren(...items);
+}
+
+async function refreshFiles(showResponse = true) {
+  setBusy(true);
+  try {
+    const { response, body } = await apiRequest("GET", `${API_BASE}/list`, { showResponse });
+    if (!response.ok) {
+      emptyList(`Unable to load files (HTTP ${response.status}).`);
+      return;
     }
-};
+    renderFiles(body);
+  } catch (error) {
+    showResponse("GET", `${API_BASE}/list`, "NETWORK ERROR", error.message);
+    emptyList("The API could not be reached.");
+  } finally {
+    setBusy(false);
+  }
+}
 
-// Download File
-window.downloadFile = async (filename) => {
-    const endpoint = `${BASE_URL}/${filename}`;
-    const start = performance.now();
-    try {
-        const res = await fetch(endpoint, { headers: getHeaders() });
-        const duration = Math.round(performance.now() - start);
-        
-        if (!res.ok) {
-            const text = await res.text();
-            showResponse('GET', endpoint, res.status, text, duration);
-            return;
-        }
+async function fetchMetadata(filename) {
+  const endpoint = `${API_BASE}/info/${encodeURIComponent(filename)}`;
+  setBusy(true);
+  try {
+    await apiRequest("GET", endpoint);
+  } catch (error) {
+    showResponse("GET", endpoint, "NETWORK ERROR", error.message);
+  } finally {
+    setBusy(false);
+  }
+}
 
-        const blob = await res.blob();
-        showResponse('GET', endpoint, res.status, blob, duration);
-        
-        // Trigger download
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-    } catch (err) {
-        showResponse('GET', endpoint, 'ERROR', err.message);
+async function downloadFile(filename) {
+  const endpoint = `${API_BASE}/${encodeURIComponent(filename)}`;
+  const started = performance.now();
+  setBusy(true);
+  try {
+    const response = await fetch(endpoint, { headers: headers() });
+    const duration = Math.round(performance.now() - started);
+    if (!response.ok) {
+      showResponse("GET", endpoint, response.status, await readBody(response), duration);
+      return;
     }
-};
 
-// Delete File
-window.deleteFile = async (filename) => {
-    if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
-    
-    const endpoint = `${BASE_URL}/${filename}`;
-    const start = performance.now();
-    try {
-        const res = await fetch(endpoint, {
-            method: 'DELETE',
-            headers: getHeaders()
-        });
-        const duration = Math.round(performance.now() - start);
-        const text = await res.text();
-        
-        showResponse('DELETE', endpoint, res.status, text, duration);
-        
-        if (res.ok) {
-            fetchFiles(); // Refresh list after successful delete
-        }
-    } catch (err) {
-        showResponse('DELETE', endpoint, 'ERROR', err.message);
+    const blob = await response.blob();
+    showResponse("GET", endpoint, response.status, {
+      message: "Download ready",
+      filename,
+      bytes: blob.size,
+      contentType: blob.type || "application/octet-stream"
+    }, duration);
+
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (error) {
+    showResponse("GET", endpoint, "NETWORK ERROR", error.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function deleteFile(filename) {
+  if (!window.confirm(`Delete ${filename}? This cannot be undone.`)) {
+    return;
+  }
+
+  const endpoint = `${API_BASE}/${encodeURIComponent(filename)}`;
+  setBusy(true);
+  try {
+    const { response, body } = await apiRequest("DELETE", endpoint);
+    if (response.ok && body === true) {
+      await refreshFiles(false);
     }
-};
+  } catch (error) {
+    showResponse("DELETE", endpoint, "NETWORK ERROR", error.message);
+  } finally {
+    setBusy(false);
+  }
+}
 
-// Event Listeners
-refreshListBtn.addEventListener('click', fetchFiles);
+elements.uploadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const file = elements.fileInput.files[0];
+  if (!file) {
+    showResponse("POST", API_BASE, "INPUT ERROR", "Choose a file before uploading.");
+    return;
+  }
 
-// Initial Load
-document.addEventListener('DOMContentLoaded', fetchFiles);
+  const formData = new FormData();
+  formData.append("file", file);
+  setBusy(true);
+  try {
+    const { response } = await apiRequest("POST", API_BASE, { body: formData });
+    if (response.ok) {
+      elements.uploadForm.reset();
+      elements.fileInfo.hidden = true;
+      await refreshFiles(false);
+    }
+  } catch (error) {
+    showResponse("POST", API_BASE, "NETWORK ERROR", error.message);
+  } finally {
+    setBusy(false);
+  }
+});
+
+elements.fileInput.addEventListener("change", () => {
+  const file = elements.fileInput.files[0];
+  if (!file) {
+    elements.fileInfo.hidden = true;
+    return;
+  }
+  elements.fileInfo.textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KB · ${file.type || "unknown type"}`;
+  elements.fileInfo.hidden = false;
+});
+
+elements.fileDropArea.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  elements.fileDropArea.classList.add("drag-over");
+});
+
+elements.fileDropArea.addEventListener("dragleave", () => elements.fileDropArea.classList.remove("drag-over"));
+elements.fileDropArea.addEventListener("drop", (event) => {
+  event.preventDefault();
+  elements.fileDropArea.classList.remove("drag-over");
+  if (event.dataTransfer.files.length > 0) {
+    elements.fileInput.files = event.dataTransfer.files;
+    elements.fileInput.dispatchEvent(new Event("change"));
+  }
+});
+elements.refreshHeroButton.addEventListener("click", refreshFiles);
+elements.refreshListButton.addEventListener("click", refreshFiles);
+
+elements.toggleApiKey.addEventListener("click", () => {
+  const shouldShow = elements.apiKey.type === "password";
+  elements.apiKey.type = shouldShow ? "text" : "password";
+  elements.toggleApiKey.textContent = shouldShow ? "Hide" : "Show";
+  elements.toggleApiKey.setAttribute("aria-label", `${shouldShow ? "Hide" : "Show"} API key`);
+});
+
+elements.themeToggle.addEventListener("click", () => {
+  const root = document.documentElement;
+  const light = root.dataset.theme === "light";
+  root.dataset.theme = light ? "dark" : "light";
+  elements.themeToggle.setAttribute("aria-label", `Switch to ${light ? "light" : "dark"} theme`);
+});
+
+refreshFiles();

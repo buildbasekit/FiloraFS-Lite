@@ -1,81 +1,32 @@
-# 🔐 Security Policy
+# Security model
 
-## 📌 Supported Versions
+This document owns FiloraFS-Lite's security controls, limitations, and deployment responsibilities. Lite is intended for simple, single-host file workflows; it is not a multi-user or distributed storage service.
 
-This project is actively maintained as part of **BuildBaseKit**.  
-Only the latest version is supported with security updates.
+## File handling
 
----
+- Uploads use UUID filenames with an allowed extension. Original names never become storage paths. The destination is created exclusively before transfer, so an existing name is not overwritten; failed transfers attempt to remove partial output.
+- Direct file operations accept one flat filename, reject absolute/nested paths, normalize under the configured root, and enforce containment. Downloads, metadata, and listing accept regular files without following symbolic links; deletion rejects links and directories.
+- PNG, JPEG, PDF, and WebP uploads require matching extensions, declared media types, and lightweight signatures. Empty files and unsupported types are rejected. These checks do **not** provide malware scanning, full format validation, or protection against all polyglot files.
+- Spring enforces configurable multipart file and request limits. The request limit includes multipart overhead. MIME headers and metadata use filename-based Spring resolution with an octet-stream fallback; MIME resolution is not a security validator.
+- Downloads use attachment disposition. Metadata omits absolute paths. Default API error responses do not include exception details or stack traces.
 
-## 🚨 Reporting a Vulnerability
+## API-key boundary
 
-If you discover a security vulnerability, please report it responsibly.
+- All `/file` operations require `X-API-KEY`; missing or incorrect keys return 401. The small filter uses Spring path normalization and constant-time byte comparison. `OPTIONS` passes through without enabling a permissive CORS policy.
+- One shared key grants access to **all** stored files, including deletion. There are no users, ownership checks, per-file permissions, or application-level rate limits.
+- `/api-test` and its assets are public; their API calls remain protected. The tester holds an entered key in page memory only and never receives the configured server secret automatically.
+- `/actuator/health` is intentionally public and exposes status without components or details. Other Actuator endpoints and discovery are not exposed by default. Health is not a full storage-integrity or backup check.
 
-**Do NOT open a public issue.**
+## Deployment responsibilities
 
-Instead, contact:
+- Replace the known development key with a strong random `FILORAFS_API_KEY` in every deployed environment. Use a deployment secret manager or environment variables, HTTPS, and appropriate network access/rate limits. Rotate leaked keys.
+- No `.env` file is required. If one exists locally, keep it ignored and private. Never commit secrets or log keys and request authorization headers. [.env.example](.env.example) contains only optional override examples.
+- Keep storage outside public static-resource and source directories. Give the service account only the filesystem permissions it needs. Only trusted administrators and the application may modify the storage root **and its ancestors**; trusted mounted paths are configuration, not client input.
+- Path and no-follow checks do not eliminate races against another local writer replacing files, links, or directories between validation and use. They do not defend against hostile hard links or a compromised host. Restrict local write access rather than treating the API as a filesystem sandbox.
+- Provide persistent storage, capacity monitoring, backups, and retention/cleanup suited to the application. Align the platform's termination grace period with the configured shutdown timeout and verify storage permissions before deployment.
 
-📧 [hello@buildbasekit.com](mailto:hello@buildbasekit.com)
+Detailed product configuration belongs in the [BuildBaseKit configuration guide](https://buildbasekit.com/docs/filorafs-lite/configuration/).
 
----
+## Reporting a vulnerability
 
-## 🛡️ What to Include
-
-Please provide:
-
-* Description of the vulnerability  
-* Steps to reproduce  
-* Potential impact  
-* Suggested fix (if available)  
-
----
-
-## ⏱️ Response Time
-
-* Initial response: within 48 hours  
-* Resolution timeline depends on severity  
-
----
-
-## 🔒 Security Best Practices
-
-This project provides a file management system. It follows basic secure practices like:
-
-* Controlled file upload handling  
-* UUID-based file naming  
-* API key-based access control protecting all file operations
-* Built-in Path Traversal protection rejecting absolute and nested paths
-* Same-origin browser API tester decoupled from API credentials  
-
-However, you should always:
-
-* Validate file types (not just MIME type)  
-* Restrict file size limits  
-* Sanitize filenames to prevent path traversal  
-* Store files outside public directories when needed  
-* Protect API keys using environment variables  
-* Use HTTPS in production  
-* Regularly update dependencies  
-
----
-
-## ⚠️ Disclaimer
-
-This project is a boilerplate intended for learning and rapid development.
-
-It is your responsibility to:
-
-* Review file handling security  
-* Configure access control properly  
-* Adapt storage strategy for production (e.g., cloud storage)  
-
----
-
-## 🌐 BuildBaseKit
-
-This project is part of **BuildBaseKit**  
-👉 https://buildbasekit.com  
-
----
-
-Security is a shared responsibility. Report issues responsibly.
+Do not disclose vulnerability details in a public issue. Use the repository's private vulnerability-reporting or GitHub Security Advisory channel when available. Otherwise contact maintainers privately through their verified project profile before sharing reproduction details. Include the affected version, impact, and steps to reproduce without real credentials or private files.

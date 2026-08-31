@@ -10,11 +10,7 @@ out/
 *.class
 *.log
 
-# Maven
-
-.mvn/
-!/.mvn/wrapper/maven-wrapper.jar
-.mvn/wrapper/maven-wrapper.properties
+# Maven wrapper files are part of the repository.
 
 # Gradle
 
@@ -86,6 +82,7 @@ logs/
 
 .env
 .env.*
+!.env.example
 application-local.properties
 application-dev.properties
 application-prod.properties
@@ -116,6 +113,9 @@ coverage/
 *.jar
 *.war
 *.ear
+
+# Maven wrapper binaries are intentional when present.
+!/.mvn/wrapper/maven-wrapper.jar
 
 # Runtime upload directory
 uploads/

@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import com.file.config.FiloraFSProperties;
 
@@ -27,9 +28,8 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
-		String path = request.getRequestURI();
-		// Only apply API key filter to the file API endpoints
-		return !path.startsWith("/file");
+		String path = UrlPathHelper.defaultInstance.getPathWithinApplication(request);
+		return !(path.equals("/file") || path.startsWith("/file/"));
 	}
 
 	@Override
@@ -46,6 +46,8 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 				properties.apiKey().getBytes(StandardCharsets.UTF_8))) {
 
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("text/plain");
+			response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 			response.getWriter().write("Unauthorized");
 			return;
 		}
